@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher
 import dev.rodrick.acer.AcerMod
 import dev.rodrick.acer.annotations.InitCommand
 import dev.rodrick.acer.config.AcerConfig
+import me.lucko.fabric.api.permissions.v0.Permissions
 import net.minecraft.command.CommandRegistryAccess
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.CommandManager.literal
@@ -19,7 +20,7 @@ object AcerCommand : BaseCommand {
     ) {
         dispatcher.register(
             literal("acer")
-                .requires { source -> source.hasPermissionLevel(4) }
+                .requires { source -> Permissions.check(source, "acer.admin", 3) }
                 .then(reloadConfig)
                 .then(listConfig)
         )

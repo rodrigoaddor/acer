@@ -6,6 +6,7 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType
 import dev.rodrick.acer.annotations.InitCommand
 import dev.rodrick.acer.config.AcerConfig
 import dev.rodrick.acer.effect.Marker
+import me.lucko.fabric.api.permissions.v0.Permissions
 import net.minecraft.command.CommandRegistryAccess
 import net.minecraft.command.argument.ItemStackArgumentType
 import net.minecraft.inventory.Inventory
@@ -30,7 +31,7 @@ object FindCommand : BaseCommand {
     ) {
         dispatcher.register(
             literal("find")
-                .requires { source -> source.hasPermissionLevel(4) && source.isExecutedByPlayer }
+                .requires { source -> source.isExecutedByPlayer && Permissions.check(source, "acer.find", 2) }
                 .executes(::execute)
                 .then(
                     argument("item", ItemStackArgumentType.itemStack(registryAccess))

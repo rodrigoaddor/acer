@@ -43,6 +43,7 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api", "fabric-api", fabricVersion)
 
     include(modImplementation("net.fabricmc", "fabric-language-kotlin", fabricKotlinVersion))
+    include(modImplementation("me.lucko", "fabric-permissions-api", "0.5.0"))
 
     transitiveInclude(implementation("com.charleskorn.kaml", "kaml", "0.55.0"))
 
