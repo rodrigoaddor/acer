@@ -1,13 +1,10 @@
 {
-  "replace": false,
   "values": [
-    "minecraft:wooden_hoe",
-    "minecraft:stone_hoe",
-    "minecraft:copper_hoe",
-    "minecraft:iron_hoe",
-    "minecraft:golden_hoe",
-    "minecraft:diamond_hoe",
-    "minecraft:netherite_hoe"
+    "#acer:scythes_level_0",
+    "#acer:scythes_level_1",
+    "#acer:scythes_level_2",
+    "#acer:scythes_level_3",
+    "#acer:scythes_level_4"
   ]
 }
 
