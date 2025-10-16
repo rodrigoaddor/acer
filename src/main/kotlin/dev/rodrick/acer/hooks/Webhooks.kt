@@ -15,10 +15,7 @@ abstract class Webhooks {
         get() = AcerConfig.data.webhooks
 
     protected fun send(message: String) {
-        if (config.endpoint.isEmpty()) {
-            AcerMod.logger.warn("Webhook endpoint is not set")
-            return
-        }
+        if (config.endpoint.isEmpty()) return
 
         CoroutineScope(Dispatchers.IO).launch {
             val response = client.post(config.endpoint) {

@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 val transitiveInclude: Configuration by configurations.creating {
     exclude(group = "org.jetbrains.kotlin")
     exclude(group = "org.jetbrains.kotlinx")
@@ -8,11 +6,11 @@ val transitiveInclude: Configuration by configurations.creating {
 
 plugins {
     idea
-    id("fabric-loom") version "1.6-SNAPSHOT"
-    id("com.google.devtools.ksp") version "1.9.24-1.0.20"
+    id("fabric-loom") version "1.11-SNAPSHOT"
+    id("com.google.devtools.ksp") version "2.2.20-2.0.4"
 
-    kotlin("jvm") version "1.9.24"
-    kotlin("plugin.serialization") version "1.9.24"
+    kotlin("jvm") version "2.2.20"
+    kotlin("plugin.serialization") version "2.2.20"
 }
 
 repositories {
@@ -64,6 +62,10 @@ kotlin {
     sourceSets.main {
         kotlin.srcDir("build/generated/ksp/main/kotlin")
     }
+
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
 }
 
 idea {
@@ -85,14 +87,10 @@ tasks {
         }
     }
 
-    val javaVersion = JavaVersion.VERSION_17
+    val javaVersion = JavaVersion.VERSION_21
     withType<JavaCompile> {
         options.encoding = "UTF-8"
         options.release.set(javaVersion.toString().toInt())
-    }
-
-    withType<KotlinCompile> {
-        kotlinOptions { jvmTarget = javaVersion.toString() }
     }
 
     java {

@@ -21,9 +21,9 @@ object SaplingPlanter {
             if (entity is ItemEntity && entity.isSapling && entity.blockStateAtPos.isAir) {
                 val stack = entity.stack
                 val block = (stack.item as BlockItem).block
-                val world = entity.world
+                val world = entity.entityWorld
 
-                if (world is ServerWorld && block.defaultState.canPlaceAt(entity.world, entity.blockPos)) {
+                if (world is ServerWorld && block.defaultState.canPlaceAt(entity.entityWorld, entity.blockPos)) {
                     if (chance >= 1 || Math.random() >= (1 - chance).pow(stack.count)) {
                         world.setBlockState(entity.blockPos, block.defaultState)
                         world.spawnParticles(

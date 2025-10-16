@@ -17,6 +17,7 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 
@@ -45,7 +46,10 @@ object FindCommand : BaseCommand {
         val item = try {
             ItemStackArgumentType.getItemStackArgument(ctx, "item").item
         } catch (_: java.lang.IllegalArgumentException) {
-            player.handItems.firstOrNull { !it.isEmpty }?.item
+            listOf(
+                player.getStackInHand(Hand.MAIN_HAND),
+                player.getStackInHand(Hand.OFF_HAND)
+            ).firstOrNull { it != null && !it.isEmpty }?.item
         } ?: throw SimpleCommandExceptionType(Text.literal("No item to find")).create()
 
 

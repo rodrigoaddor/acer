@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseEntityCallback
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityType
+import net.minecraft.entity.SpawnReason
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.inventory.Inventory
@@ -53,7 +54,7 @@ object Marker {
                     world,
                     player.getStackInHand(hand),
                     hand,
-                    BlockHitResult(player.pos, Direction.UP, entity.blockPos, false)
+                    BlockHitResult(player.blockPos.toCenterPos(), Direction.UP, entity.blockPos, false)
                 )
                 entity.remove(Entity.RemovalReason.KILLED)
                 ActionResult.SUCCESS
@@ -83,7 +84,7 @@ object Marker {
     }
 
     fun spawn(world: World, pos: BlockPos) {
-        EntityType.SHULKER.create(world)?.run {
+        EntityType.SHULKER.create(world, SpawnReason.COMMAND)?.run {
             isMarker = true
             isGlowing = true
             isAiDisabled = true
