@@ -8,7 +8,8 @@ data class AcerConfigData(
     val replantSaplings: ReplantSaplings = ReplantSaplings(),
     val webhooks: Webhooks = Webhooks(),
     val finder: Finder = Finder(),
-    val scythes: Boolean = true
+    val scythes: Boolean = true,
+    val disableEndPortal: Boolean = false
 ) {
     @Serializable
     data class ReplantSaplings(
