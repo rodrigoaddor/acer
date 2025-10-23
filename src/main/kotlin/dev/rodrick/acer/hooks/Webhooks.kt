@@ -6,7 +6,9 @@ import dev.rodrick.acer.config.AcerConfigData
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 abstract class Webhooks {
     private val client = HttpClient(CIO)
@@ -28,13 +30,13 @@ abstract class Webhooks {
                 setBody(message)
             }
 
-            if (response.status.value.let { it < 200 || it > 299 }) {
+            if (response.status.value.let { it !in 200..299 }) {
                 AcerMod.logger.error("Webhook request failed with status ${response.status.value}")
             }
         }
     }
 
-    private val placeholderRegex = Regex("""(?<!\\)\$(\S+)""")
+    private val placeholderRegex = Regex("""(?<!\\)\$\{(\S+)}""")
 
     protected fun replacePlaceholders(message: String, placeholders: Map<String, String>): String =
         placeholderRegex.replace(message) {
