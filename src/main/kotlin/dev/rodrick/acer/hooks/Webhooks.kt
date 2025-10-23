@@ -36,7 +36,7 @@ abstract class Webhooks {
         }
     }
 
-    private val placeholderRegex = Regex("""(?<!\\)\$\{(\S+)}""")
+    private val placeholderRegex = Regex("""(?<!\\)\$\{(\w+?)}""")
 
     protected fun replacePlaceholders(message: String, placeholders: Map<String, String>): String =
         placeholderRegex.replace(message) {
