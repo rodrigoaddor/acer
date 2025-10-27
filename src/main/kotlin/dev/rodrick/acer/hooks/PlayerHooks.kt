@@ -1,11 +1,12 @@
 package dev.rodrick.acer.hooks
 
 import dev.rodrick.acer.annotations.Init
+import dev.rodrick.acer.callbacks.NotWhitelistedCallback
 import kotlinx.serialization.Serializable
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.server.network.ServerPlayNetworkHandler
 
-object PlayerHooks: Webhooks() {
+object PlayerHooks : Webhooks() {
     @Init
     fun init() {
         ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
@@ -17,6 +18,15 @@ object PlayerHooks: Webhooks() {
         ServerPlayConnectionEvents.DISCONNECT.register { handler, _ ->
             config.onLeave?.run {
                 handlePlayerWithBlacklist(handler, this)
+            }
+        }
+
+        NotWhitelistedCallback.EVENT.register { player, ip ->
+            config.onNotWhitelisted?.run {
+                if (player == null || blacklist?.contains(player) != true) {
+                    val placeholders = mapOf("player" to (player ?: "[Unknown]"), "ip" to ip)
+                    send(replacePlaceholders(message, placeholders))
+                }
             }
         }
     }

@@ -3,7 +3,8 @@
   "package": "dev.rodrick.acer.mixin",
   "compatibilityLevel": "JAVA_21",
   "server": [
-    "EntityDespawnMixin"
+    "EntityDespawnMixin",
+    "NotWhitelistedMixin"
   ],
   "injectors": {
     "defaultRequire": 1

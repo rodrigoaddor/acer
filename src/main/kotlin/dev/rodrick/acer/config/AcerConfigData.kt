@@ -23,10 +23,13 @@ data class AcerConfigData(
         val headers: Map<String, String>? = mapOf(),
 
         val onJoin: PlayerHooks.Options? = PlayerHooks.Options(
-            message = "Player \$player joined the game"
+            message = $$"Player ${player} joined the game."
         ),
         val onLeave: PlayerHooks.Options? = PlayerHooks.Options(
-            message = "Player \$player left the game ",
+            message = $$"Player ${player} left the game.",
+        ),
+        val onNotWhitelisted: PlayerHooks.Options? = PlayerHooks.Options(
+            message = $$"Player ${player} (${ip}) tried to join the game, but they are not white-listed."
         )
     )
 
