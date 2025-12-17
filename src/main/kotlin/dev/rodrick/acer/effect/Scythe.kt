@@ -4,32 +4,33 @@ import dev.rodrick.acer.AcerMod
 import dev.rodrick.acer.annotations.Init
 import dev.rodrick.acer.config.AcerConfig
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
-import net.minecraft.block.CropBlock
-import net.minecraft.enchantment.EnchantmentHelper
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.ItemEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.BlockItem
-import net.minecraft.item.ItemStack
-import net.minecraft.loot.context.LootContextParameters
-import net.minecraft.loot.context.LootWorldContext
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.tag.BlockTags
-import net.minecraft.registry.tag.TagKey
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
+import net.minecraft.core.registries.Registries
+import net.minecraft.resources.Identifier
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundSource
+import net.minecraft.tags.BlockTags
+import net.minecraft.tags.TagKey
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.EnchantmentHelper
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.level.block.CropBlock
+import net.minecraft.world.level.storage.loot.LootParams
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams
 
 object Scythe {
     private val CROPS = BlockTags.CROPS
-    private val SCYTHES = TagKey.of(RegistryKeys.ITEM, Identifier.of(AcerMod.MOD_ID, "scythes"))
+    private val SCYTHES = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(AcerMod.MOD_ID, "scythes"))
 
     fun getScytheLevel(item: ItemStack): Int {
         for (level in 4 downTo 1) {
-            val levelTag = TagKey.of(RegistryKeys.ITEM, Identifier.of(AcerMod.MOD_ID, "scythes_level_$level"))
-            if (item.isIn(levelTag)) return level
+            val levelTag =
+                TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(AcerMod.MOD_ID, "scythes_level_$level"))
+            if (item.`is`(levelTag)) return level
         }
 
         return 0
@@ -46,7 +47,7 @@ object Scythe {
             val blocks = mutableSetOf<BlockPos>()
             for (x in -distance..distance) {
                 for (z in -distance..distance) {
-                    blocks.add(center.add(x, 0, z))
+                    blocks.add(center.offset(x, 0, z))
                 }
             }
             return blocks.toSet()
@@ -62,31 +63,31 @@ object Scythe {
     }
 
     fun handleBlock(
-        world: ServerWorld, blockPos: BlockPos, player: PlayerEntity, tool: ItemStack
+        world: ServerLevel, blockPos: BlockPos, player: Player, tool: ItemStack
     ): Boolean {
         val blockEntity = world.getBlockEntity(blockPos)
         val blockState = world.getBlockState(blockPos)
 
-        if (!blockState.isIn(CROPS) || (blockState.block as? CropBlock)?.isMature(blockState) != true) {
+        if (!blockState.`is`(CROPS) || (blockState.block as? CropBlock)?.isMaxAge(blockState) != true) {
             return false
         }
 
-        val lootContext = LootWorldContext.Builder(world).add(LootContextParameters.ORIGIN, blockPos.toCenterPos())
-            .add(LootContextParameters.TOOL, tool).addOptional(LootContextParameters.THIS_ENTITY, player)
-            .addOptional(LootContextParameters.BLOCK_ENTITY, blockEntity)
+        val lootContext = LootParams.Builder(world).withParameter(LootContextParams.ORIGIN, blockPos.center)
+            .withParameter(LootContextParams.TOOL, tool).withOptionalParameter(LootContextParams.THIS_ENTITY, player)
+            .withOptionalParameter(LootContextParams.BLOCK_ENTITY, blockEntity)
 
-        blockState.getDroppedStacks(lootContext).forEach { stack ->
-            if ((stack.item as? BlockItem)?.block?.defaultState?.isIn(CROPS) == true) {
+        blockState.getDrops(lootContext).forEach { stack ->
+            if ((stack.item as? BlockItem)?.block?.defaultBlockState()?.`is`(CROPS) == true) {
                 stack.count--
             }
 
             if (stack.count > 0) {
-                val pos = blockPos.toCenterPos()
+                val pos = blockPos.center
                 val entity = ItemEntity(world, pos.x, pos.y, pos.z, stack).apply {
-                    setToDefaultPickupDelay()
+                    setDefaultPickUpDelay()
                 }
 
-                world.spawnEntity(entity)
+                world.addFreshEntity(entity)
             }
         }
 
@@ -95,13 +96,13 @@ object Scythe {
             blockPos.x.toDouble(),
             blockPos.y.toDouble(),
             blockPos.z.toDouble(),
-            blockState.soundGroup.breakSound,
-            SoundCategory.BLOCKS,
+            blockState.soundType.breakSound,
+            SoundSource.BLOCKS,
             0.6f,
             1.0f,
         )
 
-        world.setBlockState(blockPos, blockState.block.defaultState)
+        world.setBlockAndUpdate(blockPos, blockState.block.defaultBlockState())
 
         return true
     }
@@ -110,28 +111,28 @@ object Scythe {
     fun init() {
         UseBlockCallback.EVENT.register { player, world, hand, hitResult ->
             val enabled = AcerConfig.data.scythes
-            if (!enabled) return@register ActionResult.PASS
+            if (!enabled) return@register InteractionResult.PASS
 
             val blockPos = hitResult.blockPos
-            val heldStack = player.getStackInHand(hand)
-            val serverWorld = world as? ServerWorld
+            val heldStack = player.getItemInHand(hand)
+            val serverWorld = world as? ServerLevel
 
-            if (!heldStack.isIn(SCYTHES)) {
-                return@register ActionResult.PASS
+            if (!heldStack.`is`(SCYTHES)) {
+                return@register InteractionResult.PASS
             }
 
-            if (player.itemCooldownManager.isCoolingDown(heldStack)) {
-                return@register ActionResult.FAIL
+            if (player.cooldowns.isOnCooldown(heldStack)) {
+                return@register InteractionResult.FAIL
             }
 
-            if (!world.getBlockState(blockPos).isIn(BlockTags.CROPS)) {
-                return@register ActionResult.PASS
+            if (!world.getBlockState(blockPos).`is`(BlockTags.CROPS)) {
+                return@register InteractionResult.PASS
             }
 
             if (serverWorld != null) {
                 var brokenBlocks = 0
 
-                if (player.isSneaking) {
+                if (player.isShiftKeyDown) {
                     val level = getScytheLevel(heldStack)
                     for (block in getBlocks(blockPos, level)) {
                         if (handleBlock(serverWorld, block, player, heldStack)) {
@@ -145,25 +146,24 @@ object Scythe {
                 }
 
                 if (brokenBlocks > 0) {
-                    heldStack.damage(
-                        brokenBlocks, player, hand.equipmentSlot
+                    heldStack.hurtAndBreak(
+                        brokenBlocks, player, hand.asEquipmentSlot()
                     )
 
-                    val efficiencyLevel = EnchantmentHelper.getLevel(
-                        world.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT).getOrThrow(Enchantments.EFFICIENCY),
-                        heldStack
+                    val efficiencyLevel = EnchantmentHelper.getItemEnchantmentLevel(
+                        world.registryAccess().getOrThrow(Enchantments.EFFICIENCY), heldStack
                     )
 
-                    player.itemCooldownManager.set(heldStack, 30 - efficiencyLevel * 6)
-                    player.swingHand(hand, true)
+                    player.cooldowns.addCooldown(heldStack, 30 - efficiencyLevel * 6)
+                    player.swing(hand, true)
 
-                    ActionResult.SUCCESS
+                    InteractionResult.SUCCESS
                 } else {
-                    ActionResult.PASS
+                    InteractionResult.PASS
                 }
             }
 
-            ActionResult.PASS
+            InteractionResult.PASS
         }
     }
 }

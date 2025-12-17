@@ -7,19 +7,19 @@ import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseEntityCallback
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.SpawnReason
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.inventory.Inventory
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.util.ActionResult
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.world.World
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.Container
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.level.Level
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.BlockHitResult
 
 object Marker {
     private const val MARKER_TAG = "acer:marker"
@@ -28,7 +28,7 @@ object Marker {
     fun init() {
         ServerTickEvents.END_WORLD_TICK.register { world ->
             val duration = AcerConfig.data.finder.duration
-            val entities = world.getEntitiesByType(EntityType.SHULKER) { it.isMarker }
+            val entities = world.getEntities(EntityType.SHULKER) { it.isMarker }
             entities.forEach {
                 if (it.health <= 0) {
                     it.remove(Entity.RemovalReason.KILLED)
@@ -41,73 +41,73 @@ object Marker {
         AttackEntityCallback.EVENT.register { _, _, _, entity, _ ->
             if (entity.isMarker) {
                 entity.remove(Entity.RemovalReason.KILLED)
-                ActionResult.SUCCESS
+                InteractionResult.SUCCESS
             }
 
-            ActionResult.PASS
+            InteractionResult.PASS
         }
 
         UseEntityCallback.EVENT.register { player, world, hand, entity, _ ->
-            if (player as? ServerPlayerEntity != null && !world.isClient && entity.isMarker) {
-                player.interactionManager.interactBlock(
+            if (player as? ServerPlayer != null && !world.isClientSide && entity.isMarker) {
+                player.gameMode.useItemOn(
                     player,
                     world,
-                    player.getStackInHand(hand),
+                    player.getItemInHand(hand),
                     hand,
-                    BlockHitResult(player.blockPos.toCenterPos(), Direction.UP, entity.blockPos, false)
+                    BlockHitResult(player.blockPosition().center, Direction.UP, entity.blockPosition(), false)
                 )
                 entity.remove(Entity.RemovalReason.KILLED)
-                ActionResult.SUCCESS
+                InteractionResult.SUCCESS
             }
-            ActionResult.PASS
+            InteractionResult.PASS
         }
 
         AttackBlockCallback.EVENT.register { _, world, _, blockPos, _ ->
             removeAt(world, blockPos)
-            ActionResult.PASS
+            InteractionResult.PASS
         }
 
         UseBlockCallback.EVENT.register { _, world, _, blockHitResult ->
             removeAt(world, blockHitResult.blockPos)
-            ActionResult.PASS
+            InteractionResult.PASS
         }
     }
 
-    private fun removeAt(world: World, pos: BlockPos) {
-        if (world.getBlockState(pos) !is Inventory) return
+    private fun removeAt(world: Level, pos: BlockPos) {
+        if (world.getBlockState(pos) !is Container) return
 
-        val box = Box(pos.x + 0.0, pos.y + 0.0, pos.z + 0.0, pos.x + 1.0, pos.y + 1.0, pos.z + 1.0)
+        val box = AABB(pos.x + 0.0, pos.y + 0.0, pos.z + 0.0, pos.x + 1.0, pos.y + 1.0, pos.z + 1.0)
 
-        world.getEntitiesByType(EntityType.SHULKER, box) { it.isMarker }.forEach { marker ->
+        world.getEntities(EntityType.SHULKER, box) { it.isMarker }.forEach { marker ->
             marker.remove(Entity.RemovalReason.KILLED)
         }
     }
 
-    fun spawn(world: World, pos: BlockPos) {
-        EntityType.SHULKER.create(world, SpawnReason.COMMAND)?.run {
+    fun spawn(world: Level, pos: BlockPos) {
+        EntityType.SHULKER.create(world, EntitySpawnReason.COMMAND)?.run {
             isMarker = true
-            isGlowing = true
-            isAiDisabled = true
+            isNoAi = true
             isSilent = true
             isInvisible = true
             isInvulnerable = true
             isSilent = true
-            disableExperienceDropping()
-            activeStatusEffects[StatusEffects.INVISIBILITY] =
-                StatusEffectInstance(StatusEffects.INVISIBILITY, Int.MAX_VALUE, 0, false, false)
+            setGlowingTag(true)
+            skipDropExperience()
+            activeEffectsMap[MobEffects.INVISIBILITY] =
+                MobEffectInstance(MobEffects.INVISIBILITY, Int.MAX_VALUE, 0, false, false)
 
-            setPosition(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-            world.spawnEntity(this)
+            setPos(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+            world.addFreshEntity(this)
         } ?: throw IllegalStateException("Could not create Marker")
     }
 
     private var Entity.isMarker: Boolean
-        get() = commandTags.contains(MARKER_TAG)
+        get() = tags.contains(MARKER_TAG)
         set(value) {
             if (value) {
-                commandTags.add(MARKER_TAG)
+                tags.add(MARKER_TAG)
             } else {
-                commandTags.remove(MARKER_TAG)
+                tags.remove(MARKER_TAG)
             }
         }
 }

@@ -6,7 +6,7 @@ val transitiveInclude: Configuration by configurations.creating {
 
 plugins {
     idea
-    id("fabric-loom") version "1.11-SNAPSHOT"
+    id("fabric-loom") version "1.14-SNAPSHOT"
     id("com.google.devtools.ksp") version "2.2.20-2.0.4"
 
     kotlin("jvm") version "2.2.20"
@@ -29,7 +29,6 @@ version = modVersion
 group = mavenGroup
 
 val minecraftVersion: String by project
-val yarnMappings: String by project
 val loaderVersion: String by project
 val fabricVersion: String by project
 val fabricKotlinVersion: String by project
@@ -37,13 +36,13 @@ val ktorVersion: String by project
 
 dependencies {
     minecraft("com.mojang", "minecraft", minecraftVersion)
-    mappings("net.fabricmc", "yarn", yarnMappings, null, "v2")
+    mappings(loom.officialMojangMappings())
     modImplementation("net.fabricmc", "fabric-loader", loaderVersion)
 
     modImplementation("net.fabricmc.fabric-api", "fabric-api", fabricVersion)
 
     include(modImplementation("net.fabricmc", "fabric-language-kotlin", fabricKotlinVersion))
-    include(modImplementation("me.lucko", "fabric-permissions-api", "0.5.0"))
+    include(modImplementation("me.lucko", "fabric-permissions-api", "0.6.0"))
 
     transitiveInclude(implementation("com.charleskorn.kaml", "kaml", "0.55.0"))
 

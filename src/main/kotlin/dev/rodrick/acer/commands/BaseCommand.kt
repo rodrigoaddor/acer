@@ -1,14 +1,14 @@
 package dev.rodrick.acer.commands
 
 import com.mojang.brigadier.CommandDispatcher
-import net.minecraft.command.CommandRegistryAccess
-import net.minecraft.server.command.CommandManager
-import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.commands.CommandBuildContext
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.commands.Commands
 
 interface BaseCommand {
     fun register(
-        dispatcher: CommandDispatcher<ServerCommandSource>,
-        registryAccess: CommandRegistryAccess,
-        environment: CommandManager.RegistrationEnvironment
+        dispatcher: CommandDispatcher<CommandSourceStack>,
+        registryAccess: CommandBuildContext,
+        environment: Commands.CommandSelection
     )
 }

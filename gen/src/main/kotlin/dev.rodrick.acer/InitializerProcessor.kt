@@ -19,13 +19,14 @@ class InitializerProcessor(
 
         if (!initSymbols.iterator().hasNext() && !commandSymbols.iterator().hasNext()) return emptyList()
 
-        val serverCommandSource = ClassName("net.minecraft.server.command", "ServerCommandSource")
         val commandDispatcher = ClassName(
             "com.mojang.brigadier", "CommandDispatcher"
-        ).parameterizedBy(serverCommandSource)
-        val commandRegistryAccess = ClassName("net.minecraft.command", "CommandRegistryAccess")
+        ).parameterizedBy(ClassName("net.minecraft.commands", "CommandSourceStack"))
+
+        val commandRegistryAccess = ClassName("net.minecraft.commands", "CommandBuildContext")
+
         val registrationEnvironment =
-            ClassName("net.minecraft.server.command.CommandManager", "RegistrationEnvironment")
+            ClassName("net.minecraft.commands.Commands", "CommandSelection")
 
         val file = FileSpec.builder("dev.rodrick.acer", "Initializer").addType(
             TypeSpec.objectBuilder("Initializer").addFunction(
@@ -50,8 +51,7 @@ class InitializerProcessor(
                             symbol.simpleName.asString()
                         )
                         addStatement(
-                            "%M(dispatcher, registryAccess, environment)",
-                            func
+                            "%M(dispatcher, registryAccess, environment)", func
                         )
                     }
                 }.build()

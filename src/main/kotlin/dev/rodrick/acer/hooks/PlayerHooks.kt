@@ -4,7 +4,7 @@ import dev.rodrick.acer.annotations.Init
 import dev.rodrick.acer.callbacks.NotWhitelistedCallback
 import kotlinx.serialization.Serializable
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
-import net.minecraft.server.network.ServerPlayNetworkHandler
+import net.minecraft.server.network.ServerGamePacketListenerImpl
 
 object PlayerHooks : Webhooks() {
     @Init
@@ -31,7 +31,7 @@ object PlayerHooks : Webhooks() {
         }
     }
 
-    private fun handlePlayerWithBlacklist(handler: ServerPlayNetworkHandler, options: Options?) {
+    private fun handlePlayerWithBlacklist(handler: ServerGamePacketListenerImpl, options: Options?) {
         val playerName = handler.player.name.string
         options?.run {
             if (blacklist?.contains(playerName) != true) {
