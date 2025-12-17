@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "dev.rodrick.acer.mixin",
+  "package": "dev.rodr.acer.mixin",
   "compatibilityLevel": "JAVA_21",
   "server": [
     "FarmBlockMixin",

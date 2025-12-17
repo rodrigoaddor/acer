@@ -5,7 +5,7 @@
   "name": "Acer",
   "description": "This is an example description! Tell everyone what your mod is about!",
   "authors": [
-    "Rodrigo Addor <me@rodrick.dev>"
+    "Rodrigo Addor <me@rodr.dev>"
   ],
   "contact": {
     "homepage": "https://github.com/rodrigoaddor/acer",
@@ -18,7 +18,7 @@
     "server": [
       {
         "adapter": "kotlin",
-        "value": "dev.rodrick.acer.AcerMod"
+        "value": "dev.rodr.acer.AcerMod"
       }
     ]
   },
