@@ -9,7 +9,8 @@ data class AcerConfigData(
     val webhooks: Webhooks = Webhooks(),
     val finder: Finder = Finder(),
     val scythes: Boolean = true,
-    val disableEndPortal: Boolean = false
+    val disableEndPortal: Boolean = false,
+    val featherFallOnFarmland: Boolean = false
 ) {
     @Serializable
     data class ReplantSaplings(
